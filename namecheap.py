@@ -1,9 +1,7 @@
 import requests
 import os
 import copy
-import itertools
-import xml.etree.cElementTree as ET
-from enum import Enum
+import xml.etree.ElementTree as etree
 
 
 class Record():
@@ -41,14 +39,23 @@ class DomainsDNS():
         return "{0}?ApiUser={1}&ApiKey={2}&UserName={3}&ClientIP={4}&SLD={5}&TLD={6}"\
             .format(self._base_url, self._api_user, self._api_key, self._username, self._client_ip, self._sld, self._tld)
 
-    def __repr__(self):
-        return "DomainsDNS -- URL: " + str(self)
+    def _process_response(self, resp):
+        ns = "{http://api.namecheap.com/xml.response}"
+        root = etree.fromstring(resp.text)
+        status = root.attrib["Status"]
+        if status.lower() == "error":
+            error = root.findall("./{0}Errors/{0}Error".format(ns))[0].text
+            print("[Namecheap] Error: " + error)
+        else:
+            cmd = root.findall("./{0}RequestedCommand".format(ns))[0].text
+            print("[Namecheap] Ok: " + cmd)
+        return resp
 
     def get(self):
-        return requests.get(str(self))
+        return self._process_response(requests.get(str(self)))
 
     def post(self):
-        return requests.post(str(self))
+        return self._process_response(requests.post(str(self)))
 
 
 class GetHosts(DomainsDNS):
@@ -59,21 +66,12 @@ class GetHosts(DomainsDNS):
     def __str__(self):
         return super().__str__() + "&Command={}".format(self._command)
 
-    def __repr__(self):
-        return "GetHosts -- URL: " + str(self)
-
 
 class SetHosts(DomainsDNS):
-    def __init__(self, records=[]):
+    def __init__(self):
         super().__init__()
         self._command = "namecheap.domains.dns.setHosts"
         self._records = []
-        self.add_records(records)
-
-    def add_records(self, records):
-        assert type(records) == list
-        [self.add_record(i) for i in records]
-        return self
 
     def add_record(self, record):
         assert type(record) == Record
@@ -90,37 +88,37 @@ class SetHosts(DomainsDNS):
 
     def __str__(self):
         res = super().__str__() + "&Command={}".format(self._command)
-        cnt = itertools.count(1)
+        cnt = 1
         for i in self._records:
-            i.index = next(cnt)
+            i.index, cnt = cnt, cnt + 1
             res += str(i)
         return res
 
-    def __repr__(self):
-        return "SetHosts -- URL: " + str(self)
 
-
-def main():
+def get_hosts():
     res = GetHosts().get().text
-    root = ET.fromstring(res)
     ns = "{http://api.namecheap.com/xml.response}"
 
-    set_hosts = SetHosts().add_records(
-        [Record(i.attrib) for i in root.iter(ns + "host")])
+    set_hosts = SetHosts()
+    for i in etree.fromstring(res).iter(ns + "host"):
+        set_hosts.add_record(Record(i.attrib))
+    return set_hosts
 
-    set_hosts.add_record(
+
+def set_challenge_record():
+    hosts = get_hosts()
+    hosts.remove_record("_acme-challenge", "TXT")
+    hosts.add_record(
         Record({
             "Name": "_acme-challenge",
             "Type": "TXT",
-            "Address": "test 123"
+            "Address": os.environ["CERTBOT_VALIDATION"],
+            "TTL": 60
         }))
-
-    print(set_hosts)
-    set_hosts.remove_record("_acme-challenge", "TXT")
-    print(set_hosts)
-
-    # print(SetHosts(records).post().text)
+    hosts.post()
 
 
-def hello():
-    print("Hello World!")
+def remove_challenge_record():
+    hosts = get_hosts()
+    hosts.remove_record("_acme-challenge", "TXT")
+    hosts.post()
