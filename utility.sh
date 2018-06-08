@@ -1,4 +1,4 @@
-#!/bin/bash -e 
+#!/bin/bash -e
 function prompt_info() {
     echo -e "\033[0;32m[INFO]\033[0m $1"
 }
@@ -28,6 +28,30 @@ function prompt() {
         else
             prompt_error "$2"
             exit $1
+        fi
+    fi
+}
+
+function _check_python_version() {
+    if [ -x "$(command -v $1)" ]; then
+        version=$($1 -V 2>&1 | awk '{print $2}' | awk -F '.' '{print $1}')
+        if [ "$version" == '3' ]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Python 3 is required to run the script
+function check_python_version() {
+    if _check_python_version python; then
+        export PYTHON=python
+    else
+        if _check_python_version python3; then
+            export PYTHON=python3
+        else
+            prompt_error "Python is not installed"
+            exit 1
         fi
     fi
 }
