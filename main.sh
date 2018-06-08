@@ -11,7 +11,7 @@
 
 # if CLIENT_IP is not set, then local IP will be used
 if [ -z "$CLIENT_IP" ]; then
-    localIp=$IP && [[ -z $IP ]] && localIp="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+    localIp="$(dig +short myip.opendns.com @resolver1.opendns.com)"
     export CLIENT_IP=localIp
 fi
 
