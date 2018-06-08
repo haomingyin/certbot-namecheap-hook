@@ -12,7 +12,7 @@
 # if CLIENT_IP is not set, then local IP will be used
 if [ -z "$CLIENT_IP" ]; then
     localIp="$(dig +short myip.opendns.com @resolver1.opendns.com)"
-    export CLIENT_IP=localIp
+    export CLIENT_IP=$localIp
 fi
 
 # certbot renew \
@@ -23,7 +23,6 @@ fi
 # --pre-hook ./authenticator.sh \
 # --post-hook ./cleanup.sh \
 # --server https://acme-v02.api.letsencrypt.org/directory
-
 
 certbot certonly \
 --manual \
