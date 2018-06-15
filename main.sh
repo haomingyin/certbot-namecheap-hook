@@ -10,11 +10,11 @@
 # export APPLY_DOMAIN=*.haomingyin.com
 
 # if CLIENT_IP is not set, then local IP will be used
-if [ -z "$CLIENT_IP" ]; then
-    localIp="$(dig +short myip.opendns.com @resolver1.opendns.com)"
-    export CLIENT_IP=$localIp
-fi
+. ./utility.sh
+get_client_ip
+get_acme_server
 
+# ----------------- certbot renew a wildcard cert --------------------
 # certbot renew \
 # --logs-dir /usr/local/var/log/letsencrypt \
 # --work-dir /usr/local/var/letsencrypt \
@@ -22,8 +22,10 @@ fi
 # --preferred-challenges=dns \
 # --pre-hook ./authenticator.sh \
 # --post-hook ./cleanup.sh \
-# --server https://acme-v02.api.letsencrypt.org/directory
+# --server $ACME_SERVER
+# ----------------------------------------------------------------------
 
+# ---------- certbot certonly obtaining a new wildcard cert ------------
 certbot certonly \
 --manual \
 --logs-dir /usr/local/var/log/letsencrypt \
@@ -33,6 +35,7 @@ certbot certonly \
 --manual-auth-hook ./authenticator.sh \
 --manual-cleanup-hook ./cleanup.sh \
 -d $APPLY_DOMAIN \
---server https://acme-v02.api.letsencrypt.org/directory \
+--server $ACME_SERVER \
 --manual-public-ip-logging-ok \
 --force-renewal
+# ----------------------------------------------------------------------

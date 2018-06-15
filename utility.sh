@@ -55,3 +55,21 @@ function check_python_version() {
         fi
     fi
 }
+
+function get_client_ip() {
+    if [ -z "$CLIENT_IP" ]; then
+        localIp="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+        export CLIENT_IP=$localIp
+    fi
+    echo $CLIENT_IP
+}
+
+function get_acme_server() {
+    if [ "$ACME_MODE" == "prod" ]; then
+        export ACME_SERVER="https://acme-v02.api.letsencrypt.org/directory"
+        prompt_info "In production mode"
+    else
+        export ACME_SERVER="https://acme-staging-v02.api.letsencrypt.org/directory"
+        prompt_info "In staging mode"
+    fi
+}
