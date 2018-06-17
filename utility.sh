@@ -67,9 +67,13 @@ function get_client_ip() {
 function get_acme_server() {
     if [ "$ACME_MODE" == "prod" ]; then
         export ACME_SERVER="https://acme-v02.api.letsencrypt.org/directory"
-        prompt_info "In production mode"
     else
         export ACME_SERVER="https://acme-staging-v02.api.letsencrypt.org/directory"
-        prompt_info "In staging mode"
     fi
+    echo $ACME_SERVER
 }
+
+# '$@' enables to call functions in utility.sh. Just use as
+# $ ./utility.sh get_client_ip
+# > 127.0.0.1
+"$@"

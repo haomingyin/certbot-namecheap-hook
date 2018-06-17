@@ -8,11 +8,15 @@
 # export SLD=haomingyin
 # export TLD=com
 # export APPLY_DOMAIN=*.haomingyin.com
+# export ACME_MODE=prod
 
 # if CLIENT_IP is not set, then local IP will be used
 . ./utility.sh
+check_python_version
 get_client_ip
 get_acme_server
+
+# Default dirs are not using because of the permission restriction on Mac OS
 
 # ----------------- certbot renew a wildcard cert --------------------
 # certbot renew \
