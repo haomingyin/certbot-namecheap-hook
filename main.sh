@@ -1,14 +1,15 @@
 #!/bin/bash -e
 
 # Required environment variables
-# export API_USER=haomingyin
+# export API_USER=usernmae
 # export API_KEY=xxx
-# export USERNAME=haomingyin
+# export USERNAME=username
 # export CLIENT_IP=127.0.0.1
 # export SLD=haomingyin
 # export TLD=com
 # export APPLY_DOMAIN=*.haomingyin.com
 # export ACME_MODE=prod
+# export EMAIL=email@gmail.com
 
 # if CLIENT_IP is not set, then local IP will be used
 . ./utility.sh
@@ -39,7 +40,9 @@ certbot certonly \
 --manual-auth-hook ./authenticator.sh \
 --manual-cleanup-hook ./cleanup.sh \
 -d $APPLY_DOMAIN \
+-m $EMAIL \
 --server $ACME_SERVER \
+-agree-tos \
 --manual-public-ip-logging-ok \
 --force-renewal
 # ----------------------------------------------------------------------

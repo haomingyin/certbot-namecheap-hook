@@ -26,6 +26,10 @@ class Record():
 
 
 class DomainsDNS():
+    """
+    Namecheap API: domains.dns [https://www.namecheap.com/support/api/methods.aspx]
+    """
+
     def __init__(self):
         self._base_url = "https://api.namecheap.com/xml.response"
         self._api_user = os.environ['API_USER']
@@ -59,15 +63,32 @@ class DomainsDNS():
 
 
 class GetHosts(DomainsDNS):
+    """
+    Namecheap API: domains.dns.getHosts [https://www.namecheap.com/support/api/methods/domains-dns/get-hosts.aspx]
+    """
+
     def __init__(self):
         super().__init__()
         self._command = "namecheap.domains.dns.getHosts"
+
+    def get_records(self):
+        res = self.get().text
+        ns = "{http://api.namecheap.com/xml.response}"
+
+        records = []
+        for i in etree.fromstring(res).iter(ns + "host"):
+            records.append(Record(i.attrib))
+        return records
 
     def __str__(self):
         return super().__str__() + "&Command={}".format(self._command)
 
 
 class SetHosts(DomainsDNS):
+    """
+    Namecheap API: domains.dns.setHosts [https://www.namecheap.com/support/api/methods/domains-dns/set-hosts.aspx]
+    """
+
     def __init__(self):
         super().__init__()
         self._command = "namecheap.domains.dns.setHosts"
@@ -95,18 +116,15 @@ class SetHosts(DomainsDNS):
         return res
 
 
-def get_hosts():
-    res = GetHosts().get().text
-    ns = "{http://api.namecheap.com/xml.response}"
-
+def get_set_hosts():
     set_hosts = SetHosts()
-    for i in etree.fromstring(res).iter(ns + "host"):
-        set_hosts.add_record(Record(i.attrib))
+    for record in GetHosts().get_records():
+        set_hosts.add_record(record)
     return set_hosts
 
 
 def set_challenge_record():
-    hosts = get_hosts()
+    hosts = get_set_hosts()
     hosts.remove_record("_acme-challenge", "TXT")
     hosts.add_record(
         Record({
@@ -119,6 +137,6 @@ def set_challenge_record():
 
 
 def remove_challenge_record():
-    hosts = get_hosts()
+    hosts = get_set_hosts()
     hosts.remove_record("_acme-challenge", "TXT")
     hosts.post()
