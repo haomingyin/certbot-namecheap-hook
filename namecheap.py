@@ -36,8 +36,14 @@ class DomainsDNS():
         self._api_key = os.environ['API_KEY']
         self._username = os.environ['USERNAME']
         self._client_ip = os.environ['CLIENT_IP']
-        self._sld = os.environ['SLD']
-        self._tld = os.environ['TLD']
+        domain_name = os.environ['CERTBOT_DOMAIN']
+        # top level domain
+        tld = os.environ['TLD']
+        if not tld:
+            tld = domain_name.rsplit('.', 1)[-1]
+        self._tld = tld
+        # second level domain
+        self._sld = domain_name[:-(len(tld) + 1)].rsplit('.', 1)[-1]
 
     def __str__(self):
         return "{0}?ApiUser={1}&ApiKey={2}&UserName={3}&ClientIP={4}&SLD={5}&TLD={6}"\
@@ -125,7 +131,8 @@ def get_set_hosts():
 
 def set_challenge_record():
     hosts = get_set_hosts()
-    hosts.remove_record("_acme-challenge", "TXT")
+    # This will cause multi-domain values to fail as they require multiple TXT records
+    # hosts.remove_record("_acme-challenge", "TXT")
     hosts.add_record(
         Record({
             "Name": "_acme-challenge",

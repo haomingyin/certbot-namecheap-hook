@@ -9,4 +9,5 @@
 # CERTBOT_SNI_DOMAIN: The SNI name for which the ACME server expects to be presented the self-signed certificate located at $CERTBOT_CERT_PATH (TLS-SNI-01 only)
 
 python3 -c "from namecheap import *; set_challenge_record()"
-sleep 30
+
+# sleep 60
