@@ -6,7 +6,6 @@
 # export USERNAME=username
 # export CLIENT_IP=127.0.0.1
 export ACME_MODE=prod
-# export EMAIL=email@gmail.com
 
 ## Redirect back into the correct folder
 SUB_DIR="$(dirname $0)"
@@ -22,36 +21,25 @@ get_acme_server
 
 # Default dirs are not using because of the permission restriction on Mac OS
 
-# ----------------- certbot renew a wildcard cert --------------------
-# certbot renew \
-# --logs-dir /usr/local/var/log/letsencrypt \
-# --work-dir /usr/local/var/letsencrypt \
-# --config-dir /usr/local/etc/letsencrypt \
-# --preferred-challenges=dns \
-# --pre-hook ./authenticator.sh \
-# --post-hook ./cleanup.sh \
-# --server $ACME_SERVER
-# ----------------------------------------------------------------------
-
-# ---------- certbot certonly obtaining a new wildcard cert ------------
-# certbot certonly \
-# --manual \
-# --logs-dir /usr/local/var/log/letsencrypt \
-# --work-dir /usr/local/var/letsencrypt \
-# --config-dir /usr/local/etc/letsencrypt \
-# --preferred-challenges=dns \
-# --manual-auth-hook ./authenticator.sh \
-# --manual-cleanup-hook ./cleanup.sh \
-# -d $APPLY_DOMAIN \
-# -m $EMAIL \
-# --server $ACME_SERVER \
-# -agree-tos \
-# --manual-public-ip-logging-ok \
-# --force-renewal
-# ----------------------------------------------------------------------
-
+# --------------------- certbot renew all certs ------------------------
 certbot renew \
   --preferred-challenges=dns \
   --manual-auth-hook ./authenticator.sh \
   --manual-cleanup-hook ./cleanup.sh \
   --server "$ACME_SERVER"
+# ----------------------------------------------------------------------
+
+# ---------- certbot certonly obtaining a new cert ------------
+# export DOMAIN_NAME=example.com
+# export EMAIL=email@gmail.com
+# certbot certonly \
+# --manual \
+# --preferred-challenges=dns \
+# --manual-auth-hook ./authenticator.sh \
+# --manual-cleanup-hook ./cleanup.sh \
+# --server $ACME_SERVER \
+# -d $DOMAIN_NAME \
+# -d "*.$DOMAIN_NAME" \
+# -m $EMAIL \
+# -agree-tos
+# ----------------------------------------------------------------------
