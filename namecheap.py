@@ -38,12 +38,11 @@ class DomainsDNS():
         self._client_ip = os.environ['CLIENT_IP']
         domain_name = os.environ['CERTBOT_DOMAIN']
         # top level domain
-        tld = os.environ['TLD']
-        if not tld:
-            tld = domain_name.rsplit('.', 1)[-1]
-        self._tld = tld
+        tld = self._tld = os.environ.get('TLD', domain_name.rsplit('.', 1)[-1])
         # second level domain
-        self._sld = domain_name[:-(len(tld) + 1)].rsplit('.', 1)[-1]
+        sld = self._sld = domain_name[:-(len(tld) + 1)].rsplit('.', 1)[-1]
+        # third, fourth, next (nth) level domain
+        self._nld = domain_name[:-(len(tld) + len(sld) + 2)]
 
     def __str__(self):
         return "{0}?ApiUser={1}&ApiKey={2}&UserName={3}&ClientIP={4}&SLD={5}&TLD={6}"\
@@ -60,6 +59,14 @@ class DomainsDNS():
             cmd = root.findall("./{0}RequestedCommand".format(ns))[0].text
             print("[Namecheap] Ok: " + cmd)
         return resp
+
+    def format_record_name(self, name):
+        assert type(name) == str, "Host name should be a valid string"
+
+        if not self._nld:
+            return name
+
+        return "{0}.{1}".format(name, self._nld)
 
     def get(self):
         return self._process_response(requests.get(str(self)))
@@ -131,19 +138,24 @@ def get_set_hosts():
 
 def set_challenge_record():
     hosts = get_set_hosts()
+    # Allow host to append any next level values
+    Name = hosts.format_record_name("_acme-challenge")
     # This will cause multi-domain values to fail as they require multiple TXT records
-    # hosts.remove_record("_acme-challenge", "TXT")
+    # hosts.remove_record(Name, "TXT")
     hosts.add_record(
         Record({
-            "Name": "_acme-challenge",
+            "Name": Name,
             "Type": "TXT",
             "Address": os.environ["CERTBOT_VALIDATION"],
             "TTL": 60
         }))
-    hosts.post()
+    print(str(hosts))
+    # hosts.post()
 
 
 def remove_challenge_record():
     hosts = get_set_hosts()
-    hosts.remove_record("_acme-challenge", "TXT")
+    # Allow host to append any next level values
+    Name = hosts.format_record_name("_acme-challenge")
+    hosts.remove_record(Name, "TXT")
     hosts.post()
