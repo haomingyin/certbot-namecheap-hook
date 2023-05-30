@@ -149,8 +149,8 @@ def set_challenge_record():
             "Address": os.environ["CERTBOT_VALIDATION"],
             "TTL": 60
         }))
-    print(str(hosts))
-    # hosts.post()
+    # print(str(hosts))
+    hosts.post()
 
 
 def remove_challenge_record():
