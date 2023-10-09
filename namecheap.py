@@ -141,7 +141,7 @@ def set_challenge_record():
     # Allow host to append any next level values
     Name = hosts.format_record_name("_acme-challenge")
     # This will cause multi-domain values to fail as they require multiple TXT records
-    hosts.remove_record(Name, "TXT")
+    # hosts.remove_record(Name, "TXT")
     hosts.add_record(
         Record({
             "Name": Name,
