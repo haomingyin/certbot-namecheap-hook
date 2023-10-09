@@ -10,4 +10,6 @@
 
 python3 -c "from namecheap import *; set_challenge_record()"
 
-sleep 60
+if [ "$CERTBOT_REMAINING_CHALLENGES" -eq 0 ]; then
+    sleep 60;
+fi
